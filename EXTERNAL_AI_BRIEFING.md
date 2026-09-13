@@ -191,22 +191,38 @@ a guess, recorded honestly as a guess, waiting on a real number.
   (S-parameter) tools in this program's own toolchain notes, but
   **neither has actually been used yet**.
 
-## The actual question to help with
+## Update, 2026-09-13 — the circuit-level rollup is now solved; don't re-derive it
 
-**Given an `mmi1x2`-based binary power-combiner tree (geometry above,
-3 stages for N=8 / 4 stages for N=16, single wavelength ~1.31 µm,
-strip waveguide 0.5 µm × 0.22 µm, Si/SiO2), what's the most practical
-open-source path to a real insertion-loss number** — per-junction
-mode-mismatch loss from a femwell-class mode solver, a circuit-level
-S-parameter roll-up (SAX/photontorch), a simpler analytic/empirical
-estimate, or something else? And: **once that number exists, how would
-you actually decide 4:1 vs. 8:1 from it** — what's the right
-loss-vs-fan-in tradeoff framing, given the existing "~0.1 dB/stage
-optimistic vs. ~10·log₁₀(N) dB/stage pessimistic" bounds above?
+A previous round of this exact question got the answer "SAX + an
+assumed per-junction loss, cascaded." **That part is now done, not a
+suggestion anymore**: a real, working SAX circuit model of this exact
+tree topology exists and correctly reproduces the cascaded-loss
+arithmetic (confirmed: 0.30 dB total for N=8, 0.40 dB for N=16, at an
+assumed 0.1 dB/junction — exactly matching the hand-derived bound
+above). **Don't spend effort re-suggesting a circuit-level rollup
+approach or re-deriving this math** — it's solved. See
+`sax_combiner_model.py` and `FINDINGS-2026-09-13.md` in this repo if
+you have access to it; if not, the short version is: the rollup
+framework is ready and waiting for one real number.
+
+## The actual question to help with — now narrower
+
+**The one thing still missing is the real per-junction excess-loss
+number itself** — not how to combine it once it exists. Given the
+exact geometry above (single wavelength ~1.31 µm, strip waveguide
+0.5 µm × 0.22 µm, Si/SiO2, the `mmi1x2` unit ~25.5 µm × 2.5 µm): what's
+the most practical **open-source** path to a real, non-assumed
+insertion-loss figure for one such junction — extending a femwell-class
+mode solver with an actual material-loss or mode-mismatch mechanism
+(not just the real-part mode-index solve already done), a literature
+or vendor datasheet figure with a real citation (not a guess dressed as
+"standard PDK data"), or something else entirely?
 
 **How to work this problem (the house style for this program):**
 measure first with default/unoptimized settings — a bad loss number is
-a *useful* result, not a failure. Don't hand-tune anything to make the
-number look good. Say explicitly what loss mechanism any estimate
-actually captures (mode mismatch? material absorption? none of the
-above?) and what it doesn't.
+a *useful* result, not a failure. Say explicitly what loss mechanism
+any method actually captures (mode mismatch? material absorption?
+something else?) and what it doesn't. **If you cite a number, cite
+where it actually comes from** — an unsourced "standard PDK data"
+figure was already flagged as a weak point in a prior round of this
+exact question; don't repeat that pattern.
