@@ -1,0 +1,1 @@
+pymeep (install via: micromamba create -n gcb-meep -c conda-forge 'pymeep=*=mpi_mpich_*')

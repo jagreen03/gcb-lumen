@@ -184,9 +184,16 @@ a guess, recorded honestly as a guess, waiting on a real number.
   loss).
 - `meep` on PyPI — **do not use this**: it's a name collision with an
   unrelated CI/CD task runner, not the real MIT FDTD simulator (which
-  is conda-forge-only under that name).
+  is conda-forge-only under that name). **Update 2026-09-13: the real
+  one (`pymeep`, conda-forge) was confirmed installable and working on
+  this program's own host** via an already-present `micromamba` (the
+  same tool used for the SPICE toolchain) — `micromamba create -n
+  gcb-meep -c conda-forge 'pymeep=*=mpi_mpich_*'`. Real FDTD access
+  exists; this bullet's earlier framing ("effectively unavailable")
+  was wrong.
 - `tidy3d` — real FDTD, but needs an external cloud account/API key;
-  this program has not authorized creating one.
+  this program has not authorized creating one. (No longer the
+  relevant alternative now that real local FDTD access is confirmed.)
 - `SAX` / `photontorch` — named as candidate circuit-level
   (S-parameter) tools in this program's own toolchain notes, but
   **neither has actually been used yet**.
@@ -205,24 +212,42 @@ approach or re-deriving this math** — it's solved. See
 you have access to it; if not, the short version is: the rollup
 framework is ready and waiting for one real number.
 
-## The actual question to help with — now narrower
+## Update, 2026-09-13 (second pass, same day) — real FDTD found, a real simulation built, the result has a bug
 
-**The one thing still missing is the real per-junction excess-loss
-number itself** — not how to combine it once it exists. Given the
-exact geometry above (single wavelength ~1.31 µm, strip waveguide
-0.5 µm × 0.22 µm, Si/SiO2, the `mmi1x2` unit ~25.5 µm × 2.5 µm): what's
-the most practical **open-source** path to a real, non-assumed
-insertion-loss figure for one such junction — extending a femwell-class
-mode solver with an actual material-loss or mode-mismatch mechanism
-(not just the real-part mode-index solve already done), a literature
-or vendor datasheet figure with a real citation (not a guess dressed as
-"standard PDK data"), or something else entirely?
+The "what's the most practical path" question below is **answered**:
+real FDTD (`pymeep`), not `femwell` alone, is the right tool, and a
+real 2D effective-index-method FDTD model of the exact `mmi1x2()`
+geometry has been built and run. **The path is no longer the open
+question — a specific bug in that model is.**
 
-**How to work this problem (the house style for this program):**
-measure first with default/unoptimized settings — a bad loss number is
-a *useful* result, not a failure. Say explicitly what loss mechanism
-any method actually captures (mode mismatch? material absorption?
-something else?) and what it doesn't. **If you cite a number, cite
-where it actually comes from** — an unsourced "standard PDK data"
-figure was already flagged as a weak point in a prior round of this
-exact question; don't repeat that pattern.
+Result at three resolutions (px/µm): 20 → 4.36 dB, 30 → 9.06 dB,
+40 → 2.86 dB excess insertion loss. The 50:50 split ratio converges
+cleanly (the geometry/source setup is basically right), but the loss
+number bounces non-monotonically instead of converging — a real
+simulation bug, not yet fixed. Leading suspect: no separate
+straight-waveguide normalization run was used for the `P_in` flux
+reference — the standard MEEP pattern for quantitative loss
+measurements normalizes against a same-resolution reference run, not
+the source's nominal power, and this script skipped that step.
+
+## The actual question to help with — now about fixing one specific bug
+
+**Given a MEEP `Simulation` with an `EigenModeSource` launching the
+fundamental mode into a straight input waveguide, an MMI junction, and
+two output waveguides, with `add_flux` monitors at the input and both
+outputs** — what's the correct way to normalize the input flux so that
+insertion-loss numbers are resolution-stable? Specifically: should the
+`P_in` reference come from a *separate* simulation run (same source,
+same resolution, straight waveguide only, no MMI) rather than the
+flux measured in the same run as the MMI, and if so, why does skipping
+that step cause non-monotonic (not just slowly-converging) resolution
+dependence rather than a consistent bias? Are there other likely
+causes worth checking first (PML/monitor distance, `eig_match_freq`
+behavior, insufficient padding)?
+
+**How to work this problem (the house style for this program):** if
+you suggest the normalization fix, explain *why* it would fix a
+non-monotonic swing specifically (not just "best practice" — what
+physically goes wrong without it, and why resolution changes its sign/
+magnitude unpredictably rather than just adding a constant bias). Say
+what you're confident about vs. guessing at.

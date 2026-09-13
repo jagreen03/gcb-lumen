@@ -5,14 +5,19 @@ that has no access to this repo?** Paste
 [`EXTERNAL_AI_BRIEFING.md`](EXTERNAL_AI_BRIEFING.md) — it's
 self-contained, no repo access required.
 
-**Progress, 2026-09-13**: an external AI's response to that briefing
-was checked and partly executed — see
-[`FINDINGS-2026-09-13.md`](FINDINGS-2026-09-13.md). One real result: a
-working `sax_combiner_model.py` circuit-level rollup for this exact
-combiner-tree topology (a real bug in it was found and fixed along the
-way). **The core question below is still open** — the model is only
-as good as the per-junction loss number fed into it, and that number
-is still assumed, not measured.
+**Progress, 2026-09-13**: an external AI's response to this repo's
+briefing was checked and partly executed — see
+[`FINDINGS-2026-09-13.md`](FINDINGS-2026-09-13.md) — producing a
+working `sax_combiner_model.py` circuit-level rollup. **Then, same
+day**: real FDTD access (`pymeep`, via `micromamba`/conda-forge) was
+found on this host, correcting this repo's own prior "FDTD is
+effectively unavailable" framing. A real 2D FDTD simulation of the
+exact combiner geometry was built and run — see
+[`FINDINGS-2026-09-13-fdtd.md`](FINDINGS-2026-09-13-fdtd.md). **The
+result is not yet trustworthy** (a real, undiagnosed convergence bug —
+three resolutions gave 4.36/9.06/2.86 dB, not a converging sequence) —
+reported honestly, not cherry-picked. **The core question below
+remains open.**
 
 **One isolated problem: what does the real MMI power-summing combiner
 actually cost in insertion loss — and is the first cell 4:1 or 8:1?**

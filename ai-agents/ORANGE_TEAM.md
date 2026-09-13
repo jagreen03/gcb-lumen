@@ -22,11 +22,14 @@ a task crosses into their territory, say so and stop.
   substitute waveguide, not a simplified model — at both
   `N_INPUTS_SPEC=8` (Phase-I bench) and `N_INPUTS_PHASE2=16` (Phase-II
   per-channel target).
-- Evaluate whether `femwell` alone suffices or whether a circuit-level
-  tool (SAX, photontorch — both already named as candidates in
-  `gcb-pic-core/README.md`'s own toolchain list, neither yet actually
-  used) is required to get from per-junction mode data to a whole-tree
-  loss figure.
+- ~~Evaluate whether `femwell` alone suffices or whether a circuit-level
+  tool is required~~ **Settled, 2026-09-13**: SAX handles the
+  whole-tree rollup (`sax_combiner_model.py`), and real FDTD (`pymeep`,
+  via `micromamba`/conda-forge) is genuinely available for the
+  per-junction extraction itself — a real simulation is built
+  (`fdtd/mmi_fdtd.py`), just not yet convergent. Fix that simulation's
+  normalization bug next, per `FINDINGS-2026-09-13-fdtd.md` — do not
+  re-litigate which tool to use.
 - Once a real number exists: answer `optical.cell.fanin`
   (`gcb-wiki/DECISION_LEDGER.md`) — 4:1 or 8:1 — from that number, not
   from preference.
@@ -68,28 +71,38 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V2 (2026-09-13: the circuit-level rollup framework is now real; the actual loss extraction is still not)
+## MEASUREMENT STATE — V3 (2026-09-13: real FDTD access found and used; result not yet trustworthy — a convergence bug, not a dead end)
 
 **The real per-junction insertion-loss extraction has still NOT been
-performed.** That remains this repo's core open question. What changed:
-a circuit-level SAX model of the exact combiner-tree topology now
-exists and is verified working — see `sax_combiner_model.py` and
-`FINDINGS-2026-09-13.md` for the full evaluation (this came from an
-external AI's suggestion, checked and partly executed, not taken on
-faith — one of its claims was an unsourced number, one raised an open
-provenance question about two file names it referenced without being
-given them, and one — SAX being real and workable here — was confirmed
-by actually building and running it, catching and fixing a real bug in
-the first attempt along the way).
+obtained with a trustworthy number.** That remains this repo's core
+open question. Two things changed this session, in order:
 
-**The next real action in a new session here is still the same as
-before: get a real, non-assumed per-junction excess-loss number** —
-via a `femwell`-based extraction with an actual material-loss
-mechanism fed in (not yet attempted), a cited literature/vendor
-figure (not yet found), or a bench measurement. The moment that number
-exists, `sax_combiner_model.py` already computes the real system-level
-answer for both N=8 and N=16 with no further modeling work — that part
-of the problem is now solved, not still drafted.
+**V2 (circuit-level rollup):** a SAX model of the exact combiner-tree
+topology now exists and is verified working — see
+`sax_combiner_model.py` and `FINDINGS-2026-09-13.md`. Still needs a
+real per-junction loss number fed into it.
+
+**V3 (real FDTD access found, a real simulation built and run):**
+`EXTERNAL_AI_BRIEFING.md`'s prior framing ("FDTD is effectively
+unavailable") was wrong — checked, not assumed. Real `pymeep` installs
+cleanly via `micromamba`/conda-forge on this host (already present for
+the SPICE toolchain). A real 2D effective-index-method FDTD model of
+the exact `mmi1x2()` geometry was built (`fdtd/mmi_fdtd.py`) and run at
+three resolutions. **The split ratio converges cleanly to 50:50** (the
+geometry/source setup is basically sane) **but the insertion-loss
+number does not converge at all** (4.36 → 9.06 → 2.86 dB across
+resolutions 20/30/40 — not monotonic, indicating a real simulation bug,
+most likely the flux-normalization reference, not yet fixed). See
+`FINDINGS-2026-09-13-fdtd.md` for the full detail and the specific
+next debugging step (a proper straight-waveguide normalization run).
+
+**The next real action: fix the FDTD normalization bug and re-check
+convergence** — this is now the most promising concrete path (a real
+tool, a real geometry, a real pipeline, one specific known bug), ahead
+of either the `femwell`-extension or literature-citation paths, which
+remain untried. Once a real, resolution-converged number exists,
+`sax_combiner_model.py` already computes the real system-level answer
+for both N=8 and N=16 with no further modeling work.
 
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
@@ -117,7 +130,9 @@ step; the fan-in decision.
 `gcb-spec/docs/optical_geometry_spec.md` (LOCKED v1.0.0 — the real
 `N=64`/`L=16` Phase-II sizing this combiner must eventually satisfy),
 `gcb-wiki/DECISION_LEDGER.md` (`optical.cell.combiner-loss`,
-`optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`.
+`optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`,
+`FINDINGS-2026-09-13-fdtd.md` and `fdtd/mmi_fdtd.py` (this repo, the
+real FDTD access finding and the unconverged simulation to fix).
 
 ## How you work
 
