@@ -1,5 +1,10 @@
 # gcb-lumen
 
+**Want to explore this with another AI chat (ChatGPT, Gemini, etc.)
+that has no access to this repo?** Paste
+[`EXTERNAL_AI_BRIEFING.md`](EXTERNAL_AI_BRIEFING.md) — it's
+self-contained, no repo access required.
+
 **One isolated problem: what does the real MMI power-summing combiner
 actually cost in insertion loss — and is the first cell 4:1 or 8:1?**
 
