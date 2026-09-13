@@ -68,12 +68,28 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V1 (drafted, not yet run)
+## MEASUREMENT STATE — V2 (2026-09-13: the circuit-level rollup framework is now real; the actual loss extraction is still not)
 
-**No extraction has been performed yet.** This repo exists because the
-toolchain is ready and the geometry is ready, but the measurement
-itself has not been attempted. The first real action in a new session
-here is running it — not re-deriving whether it's possible.
+**The real per-junction insertion-loss extraction has still NOT been
+performed.** That remains this repo's core open question. What changed:
+a circuit-level SAX model of the exact combiner-tree topology now
+exists and is verified working — see `sax_combiner_model.py` and
+`FINDINGS-2026-09-13.md` for the full evaluation (this came from an
+external AI's suggestion, checked and partly executed, not taken on
+faith — one of its claims was an unsourced number, one raised an open
+provenance question about two file names it referenced without being
+given them, and one — SAX being real and workable here — was confirmed
+by actually building and running it, catching and fixing a real bug in
+the first attempt along the way).
+
+**The next real action in a new session here is still the same as
+before: get a real, non-assumed per-junction excess-loss number** —
+via a `femwell`-based extraction with an actual material-loss
+mechanism fed in (not yet attempted), a cited literature/vendor
+figure (not yet found), or a bench measurement. The moment that number
+exists, `sax_combiner_model.py` already computes the real system-level
+answer for both N=8 and N=16 with no further modeling work — that part
+of the problem is now solved, not still drafted.
 
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
