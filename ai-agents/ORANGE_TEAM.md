@@ -71,7 +71,7 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V5 (2026-09-13: both prior hypotheses were wrong; real cause found — under-resolution; real convergence now visible, not yet final)
+## MEASUREMENT STATE — V6 (2026-09-13: clean, monotonic convergence through res=80; a res=100 confirmatory run in progress)
 
 **The real per-junction insertion-loss extraction has still NOT been
 obtained with a trustworthy number.** That remains this repo's core
@@ -130,13 +130,31 @@ for the full reasoning, including a directional (not final) read that
 the true per-junction loss is likely ~2–2.5 dB — well above the
 literature's ~0.1 dB/stage optimistic guess.
 
-**The next real action: continue the resolution sweep (80, then
-100+ px/µm) until two successive resolutions agree within a chosen
-tolerance** — a real, known, explicable cause now, not blind guessing;
-this is a standard (if computationally expensive) FDTD convergence
-study, not a bug hunt. Once a real, converged number exists,
-`sax_combiner_model.py` already computes the real system-level answer
-for both N=8 and N=16 with no further modeling work.
+**V6 (2026-09-13, same day): resolution 80 confirms clean, monotonic
+convergence.** IL = **2.07 dB** (split still 0.4999:0.5001). Sequence
+now: 2.87 (res=40) → 2.30 (res=60) → 2.07 (res=80) dB — monotonically
+decreasing, gaps shrinking (−0.57, then −0.23 dB), the expected shape
+for genuine convergence. A rough, explicitly-labeled geometric
+extrapolation from these three points suggests a possible limit near
+**~1.9 dB** — not a result, a guess to check. **Engineering note**:
+res=80's junction run took 745 s, too long to fit with its reference
+run in one bounded call — split into `fdtd/mmi_fdtd_single.py` (thin
+wrapper around the same `build()`, no reimplementation) so each
+configuration runs as its own backgrounded process. See
+`FINDINGS-2026-09-13-fdtd-v4.md` for the full detail, including what
+this would mean for the fan-in decision if it holds (worse than the
+`~0.1 dB/stage` literature guess, better than the `~10·log₁₀(N)`
+pessimistic bound) — stated cautiously, not as a number to act on yet.
+
+**A resolution-100 confirmatory run was started as a background task
+this session** — check its result before doing anything else. If it
+lands near the ~1.9 dB rough extrapolation, that's real evidence of
+convergence and a number in that neighborhood could reasonably be
+adopted (tagged `[M]easured-in-sim`, this whole convergence history
+cited). If not, more resolutions are needed before trusting any figure.
+Once a real, converged number exists, `sax_combiner_model.py` already
+computes the real system-level answer for both N=8 and N=16 with no
+further modeling work.
 
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
@@ -165,11 +183,10 @@ step; the fan-in decision.
 `N=64`/`L=16` Phase-II sizing this combiner must eventually satisfy),
 `gcb-wiki/DECISION_LEDGER.md` (`optical.cell.combiner-loss`,
 `optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`,
-`FINDINGS-2026-09-13-fdtd.md`, `FINDINGS-2026-09-13-fdtd-v2.md`,
-`FINDINGS-2026-09-13-fdtd-v3.md`, `fdtd/mmi_fdtd.py`,
-`fdtd/mmi_fdtd_v2.py` (this repo: the real FDTD access finding, two
-ruled-out hypotheses, and the real under-resolution cause found at a
-fourth, higher resolution).
+`FINDINGS-2026-09-13-fdtd.md` through `-v4.md`, `fdtd/mmi_fdtd.py`,
+`fdtd/mmi_fdtd_v2.py`, `fdtd/mmi_fdtd_single.py` (this repo: the real
+FDTD access finding, two ruled-out hypotheses, the real under-
+resolution cause, and clean convergence through res=80).
 
 ## How you work
 

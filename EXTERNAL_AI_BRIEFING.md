@@ -265,24 +265,40 @@ whose diagonal edges get staircased onto the FDTD grid — a normal,
 well-known FDTD sensitivity for sub-wavelength diagonal geometry, not
 a bug. Real convergence is visible now; it isn't finished.
 
-## The actual question to help with — now a standard (if expensive) convergence study, not a bug hunt
+## Update, 2026-09-13 (fifth pass, same day) — resolution 80 confirms clean, monotonic convergence
 
-**Given the pattern above (loss estimates converging as resolution
-increases: 2.87 dB at 40 px/µm, 2.30 dB at 60 px/µm, still ~20%
-apart)** — what's a sensible next resolution to try to get within, say,
-5–10% agreement between successive points, given 2D MEEP FDTD run cost
-scales roughly as resolution^2.5–3? Is there a smarter alternative to
-simply raising global resolution further — e.g., verifying MEEP's
-default dielectric subpixel-smoothing is actually active for `Prism`
-(polygon) geometries the way it is for `Block`s, or replacing the
-tapers' `Prism` representation with many small `Block` steps — that
-might converge faster than brute-force resolution increases?
+**The predicted convergence continued**: resolution 80 gives
+**2.07 dB** (split still 0.4999:0.5001). Full sequence: 2.87 (res=40)
+→ 2.30 (res=60) → 2.07 (res=80) dB — monotonically decreasing, gaps
+shrinking each step (−0.57 dB, then −0.23 dB). This is now genuinely
+converging, not bouncing. A rough geometric extrapolation from these
+three points (treating each gap as ~0.4× the previous) suggests a
+possible limit near **~1.9 dB** — stated explicitly as an unverified
+guess, not a result. A resolution-100 run is checking this now.
+
+**Engineering note, not physics**: at resolution 80 the junction-
+geometry run alone took 745 s — split into a `mmi_fdtd_single.py`
+wrapper running one configuration per process so each fits its own
+timed run; this changed nothing about the geometry or physics.
+
+## The actual question to help with — is the extrapolation trustworthy, and when to stop
+
+**Given three converging points (2.87, 2.30, 2.07 dB at resolutions
+40/60/80, roughly geometric-decaying gaps) and a resolution-100 point
+in progress** — is a simple geometric-series extrapolation
+(`next_gap ≈ 0.4 × previous_gap`, summed to a limit) a reasonable way
+to estimate the converged value for this kind of FDTD resolution
+sweep, or is that oversimplified for how FDTD discretization error
+typically scales (often closer to a low-order power of resolution,
+not a clean geometric ratio)? Once the resolution-100 value comes in,
+what agreement threshold between successive resolutions (e.g., within
+5%, within 0.05 dB) would be reasonable to call this "converged enough
+to use," given this number feeds a real engineering decision (4:1 vs.
+8:1 combiner fan-in) rather than needing extreme precision?
 
 **How to work this problem (the house style for this program):** three
-different hypotheses have already been tried and ruled out today
-(same-run monitor contamination, a separate normalization reference
-run, and run-duration variation) — the real cause (under-resolved
-tapers) is now known, so focus on *how to converge efficiently*, not
-on re-diagnosing why it doesn't converge. Say what you're confident
-about vs. guessing at, and if you estimate a likely final dB value,
-say clearly that it's an extrapolation, not a converged result.
+different bug hypotheses were tried and ruled out earlier today before
+the real cause (under-resolved tapers) was found — that question is
+closed; focus on convergence-criteria and extrapolation-validity now,
+not on re-diagnosing why earlier runs didn't converge. Say what you're
+confident about vs. guessing at.

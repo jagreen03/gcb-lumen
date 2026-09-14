@@ -22,11 +22,15 @@ was never the variable behind them. **The real cause, found at a
 fourth, higher resolution**
 ([`FINDINGS-2026-09-13-fdtd-v3.md`](FINDINGS-2026-09-13-fdtd-v3.md)):
 resolutions 20–30 were simply too coarse to resolve the taper geometry
-— not a bug. 40→60 shows genuine convergence (2.87 → 2.30 dB), pointing
-toward a per-junction loss around ~2–2.5 dB — directional, not final.
-**The core question below remains open**, but the search space has
-gone from "unexplained bug" to "a normal, if expensive, FDTD
-convergence study, partway done."
+— not a bug. **Resolution 80 then confirmed clean, monotonic
+convergence**
+([`FINDINGS-2026-09-13-fdtd-v4.md`](FINDINGS-2026-09-13-fdtd-v4.md)):
+2.87 → 2.30 → **2.07 dB** across res 40/60/80, gaps shrinking each
+time — the real shape of genuine convergence, not a bounce. A rough
+extrapolation suggests a possible limit near ~1.9 dB; a resolution-100
+run is checking that now. **The core question below remains open**,
+but the search space has gone from "unexplained bug" to "one more
+confirmatory data point away from a real, trustworthy answer."
 
 **One isolated problem: what does the real MMI power-summing combiner
 actually cost in insertion loss — and is the first cell 4:1 or 8:1?**
