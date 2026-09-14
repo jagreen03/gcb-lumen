@@ -71,7 +71,7 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V3 (2026-09-13: real FDTD access found and used; result not yet trustworthy — a convergence bug, not a dead end)
+## MEASUREMENT STATE — V4 (2026-09-13: real FDTD access found and used; one fix tried and ruled out; diagnosis sharpened, not yet fixed)
 
 **The real per-junction insertion-loss extraction has still NOT been
 obtained with a trustworthy number.** That remains this repo's core
@@ -91,18 +91,33 @@ the exact `mmi1x2()` geometry was built (`fdtd/mmi_fdtd.py`) and run at
 three resolutions. **The split ratio converges cleanly to 50:50** (the
 geometry/source setup is basically sane) **but the insertion-loss
 number does not converge at all** (4.36 → 9.06 → 2.86 dB across
-resolutions 20/30/40 — not monotonic, indicating a real simulation bug,
-most likely the flux-normalization reference, not yet fixed). See
-`FINDINGS-2026-09-13-fdtd.md` for the full detail and the specific
-next debugging step (a proper straight-waveguide normalization run).
+resolutions 20/30/40 — not monotonic). See `FINDINGS-2026-09-13-fdtd.md`.
 
-**The next real action: fix the FDTD normalization bug and re-check
-convergence** — this is now the most promising concrete path (a real
-tool, a real geometry, a real pipeline, one specific known bug), ahead
-of either the `femwell`-extension or literature-citation paths, which
-remain untried. Once a real, resolution-converged number exists,
-`sax_combiner_model.py` already computes the real system-level answer
-for both N=8 and N=16 with no further modeling work.
+**V4 (2026-09-13, same day: the suspected fix was tried and failed —
+a real negative result, not hidden):** `fdtd/mmi_fdtd_v2.py` adds a
+separate clean reference run (no junction, no reflection source) to
+normalize `P_in` against — the fix `FINDINGS-2026-09-13-fdtd.md`
+recommended. **It did not converge the result** (4.36 → 10.94 → 2.87
+dB — resolution 30 got *worse*, not better). This rules out reflection
+contamination as the dominant cause. **New, sharper diagnosis**:
+`P_in` itself, from the clean no-junction reference run, varies 2.3×
+across resolution (5.71e-5/7.57e-5/3.22e-5) — the bug is upstream of
+any monitor placement, most likely in the field-decay-based stopping
+criterion (`stop_when_fields_decayed`) causing different resolutions to
+integrate the flux DFT over different total simulation times, or in
+the `EigenModeSource`'s own resolution-dependent power normalization.
+See `FINDINGS-2026-09-13-fdtd-v2.md` for the full reasoning and the
+next concrete step (replace the decay-based stop with a fixed `until=`
+so every resolution integrates the same total time, before trying
+anything else).
+
+**The next real action: fix the run-duration/DFT-completeness issue
+before trying a third hypothesis** — two real fixes have now been
+tried and ruled out; this needs careful, one-variable-at-a-time
+debugging, not another rushed guess. Once a real, resolution-converged
+number exists, `sax_combiner_model.py` already computes the real
+system-level answer for both N=8 and N=16 with no further modeling
+work.
 
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
@@ -131,8 +146,10 @@ step; the fan-in decision.
 `N=64`/`L=16` Phase-II sizing this combiner must eventually satisfy),
 `gcb-wiki/DECISION_LEDGER.md` (`optical.cell.combiner-loss`,
 `optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`,
-`FINDINGS-2026-09-13-fdtd.md` and `fdtd/mmi_fdtd.py` (this repo, the
-real FDTD access finding and the unconverged simulation to fix).
+`FINDINGS-2026-09-13-fdtd.md`, `FINDINGS-2026-09-13-fdtd-v2.md`,
+`fdtd/mmi_fdtd.py`, `fdtd/mmi_fdtd_v2.py` (this repo, the real FDTD
+access finding, the first unconverged simulation, and the tried-and-
+ruled-out normalization fix).
 
 ## How you work
 

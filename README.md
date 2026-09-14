@@ -14,9 +14,15 @@ found on this host, correcting this repo's own prior "FDTD is
 effectively unavailable" framing. A real 2D FDTD simulation of the
 exact combiner geometry was built and run — see
 [`FINDINGS-2026-09-13-fdtd.md`](FINDINGS-2026-09-13-fdtd.md). **The
-result is not yet trustworthy** (a real, undiagnosed convergence bug —
-three resolutions gave 4.36/9.06/2.86 dB, not a converging sequence) —
-reported honestly, not cherry-picked. **The core question below
+result is not yet trustworthy** (a real convergence bug — three
+resolutions gave 4.36/9.06/2.86 dB, not a converging sequence) —
+reported honestly, not cherry-picked. **The suspected fix was tried
+next, same day, and failed** — see
+[`FINDINGS-2026-09-13-fdtd-v2.md`](FINDINGS-2026-09-13-fdtd-v2.md): a
+separate normalization reference run didn't converge the result
+either, but it ruled out one real hypothesis and sharpened the
+diagnosis toward the simulation's run-duration/stopping criterion.
+**The core question below
 remains open.**
 
 **One isolated problem: what does the real MMI power-summing combiner

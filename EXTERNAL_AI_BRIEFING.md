@@ -224,30 +224,46 @@ Result at three resolutions (px/µm): 20 → 4.36 dB, 30 → 9.06 dB,
 40 → 2.86 dB excess insertion loss. The 50:50 split ratio converges
 cleanly (the geometry/source setup is basically right), but the loss
 number bounces non-monotonically instead of converging — a real
-simulation bug, not yet fixed. Leading suspect: no separate
-straight-waveguide normalization run was used for the `P_in` flux
-reference — the standard MEEP pattern for quantitative loss
-measurements normalizes against a same-resolution reference run, not
-the source's nominal power, and this script skipped that step.
+simulation bug, not yet fixed.
 
-## The actual question to help with — now about fixing one specific bug
+## Update, 2026-09-13 (third pass, same day) — the normalization fix was tried and FAILED; the diagnosis sharpened
 
-**Given a MEEP `Simulation` with an `EigenModeSource` launching the
-fundamental mode into a straight input waveguide, an MMI junction, and
-two output waveguides, with `add_flux` monitors at the input and both
-outputs** — what's the correct way to normalize the input flux so that
-insertion-loss numbers are resolution-stable? Specifically: should the
-`P_in` reference come from a *separate* simulation run (same source,
-same resolution, straight waveguide only, no MMI) rather than the
-flux measured in the same run as the MMI, and if so, why does skipping
-that step cause non-monotonic (not just slowly-converging) resolution
-dependence rather than a consistent bias? Are there other likely
-causes worth checking first (PML/monitor distance, `eig_match_freq`
-behavior, insufficient padding)?
+The normalization-reference fix this file used to suggest was **tried
+and did not work**: a separate straight-waveguide reference run
+(no junction, no reflection source at all) gave nearly the same
+non-converging pattern (4.36 → **10.94** → 2.87 dB — resolution 30 got
+*worse*). **Don't re-suggest this fix** — it's ruled out.
 
-**How to work this problem (the house style for this program):** if
-you suggest the normalization fix, explain *why* it would fix a
-non-monotonic swing specifically (not just "best practice" — what
-physically goes wrong without it, and why resolution changes its sign/
-magnitude unpredictably rather than just adding a constant bias). Say
-what you're confident about vs. guessing at.
+**New, sharper observation**: `P_in` itself, measured from that clean
+reference run with no junction present, varies 2.3× across resolution
+(5.71e-5 / 7.57e-5 / 3.22e-5 at res 20/30/40) — for a fixed real
+source, a well-resolved run should give a *stable* `P_in`. This points
+upstream of monitor placement entirely: either the `EigenModeSource`'s
+own injected power is resolution-dependent, or (the current leading
+suspect) the `stop_when_fields_decayed` stopping criterion causes
+different resolutions to integrate their flux DFTs over different
+*total* simulation times, under-counting pulse energy inconsistently.
+
+## The actual question to help with — now about run-duration, not normalization
+
+**Given a MEEP `Simulation` using `sim.run(until_after_sources=
+mp.stop_when_fields_decayed(50, mp.Ez, some_point, 1e-4))`, with
+`add_flux` monitors (continuous DFT accumulation from `t=0`)** — can a
+field-decay-based stopping criterion cause different resolutions to
+stop at meaningfully different *total* elapsed simulation time in a
+way that under-counts flux-monitor energy inconsistently across runs?
+If so, is replacing it with a fixed, resolution-independent `until=`
+(generous enough for the pulse to fully clear the cell at the slowest
+expected group velocity) the right fix, and roughly how should that
+fixed time be sized for a ~30 µm cell at λ≈1.31 µm in a waveguide with
+`n_eff≈2.68`? Separately: is there a known resolution-dependence in
+how `EigenModeSource` normalizes injected power that's worth checking
+instead of (or in addition to) the run-duration issue?
+
+**How to work this problem (the house style for this program):**
+explain *why* your suggested fix would produce resolution-*stable*
+`P_in` specifically, not just cite it as best practice. Two fixes have
+already been tried and failed this session (a same-run monitor fix and
+a separate-reference-run fix) — don't suggest either again without
+explaining what's different this time. Say what you're confident about
+vs. guessing at.
