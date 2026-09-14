@@ -59,6 +59,15 @@ import jax.numpy as jnp
 
 EXCESS_LOSS_DB_OPTIMISTIC = 0.1  # mmi_tree_model.py's own literature-cited estimate
 EXCESS_LOSS_DB_UPPER = 0.3       # the external AI's suggested upper end - also unsourced, tested for comparison only
+# [M]easured-in-sim, 2026-09-13: real FDTD (pymeep) of the actual mmi1x2()
+# geometry, resolution-converged through res=100 px/um (FINDINGS-2026-09-13-fdtd-v4/v5.md):
+# 2.87 (res=40) -> 2.30 (60) -> 2.07 (80) -> 1.96 dB (100), shrinking gaps
+# (ratio ~0.44 each step) extrapolating to ~1.87 dB at full convergence.
+# Using the last real data point (1.96 dB), NOT the extrapolation, as the
+# tagged [M]easured value - the extrapolation is a derived estimate, kept
+# separate and clearly labeled.
+EXCESS_LOSS_DB_MEASURED = 1.96      # [M] res=100, not yet at the true asymptote
+EXCESS_LOSS_DB_EXTRAPOLATED = 1.87  # [D] geometric extrapolation from 4 points, NOT measured
 
 def mmi2x1_combiner(excess_loss_db: float = 0.1):
     """A 2-input, 1-output coherent power combiner with a given excess
@@ -114,7 +123,12 @@ def build_tree_netlist(n_inputs: int, excess_loss_db: float):
 
 for n_inputs, label in ((8, "Phase-I bench"), (16, "Phase-II integrated array")):
     print(f"--- N={n_inputs} ({label}) ---")
-    for excess_loss_db in (EXCESS_LOSS_DB_OPTIMISTIC, EXCESS_LOSS_DB_UPPER):
+    for excess_loss_db in (
+        EXCESS_LOSS_DB_OPTIMISTIC,
+        EXCESS_LOSS_DB_UPPER,
+        EXCESS_LOSS_DB_MEASURED,
+        EXCESS_LOSS_DB_EXTRAPOLATED,
+    ):
         netlist, n_stages = build_tree_netlist(n_inputs, excess_loss_db)
         circuit, _ = sax.circuit(
             netlist=netlist,

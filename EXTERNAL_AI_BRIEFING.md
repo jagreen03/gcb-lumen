@@ -281,24 +281,31 @@ geometry run alone took 745 s — split into a `mmi_fdtd_single.py`
 wrapper running one configuration per process so each fits its own
 timed run; this changed nothing about the geometry or physics.
 
-## The actual question to help with — is the extrapolation trustworthy, and when to stop
+## Update, 2026-09-13 (sixth pass, same day) — CONCLUDED: a real, converged-enough number, fed into the system-level model
 
-**Given three converging points (2.87, 2.30, 2.07 dB at resolutions
-40/60/80, roughly geometric-decaying gaps) and a resolution-100 point
-in progress** — is a simple geometric-series extrapolation
-(`next_gap ≈ 0.4 × previous_gap`, summed to a limit) a reasonable way
-to estimate the converged value for this kind of FDTD resolution
-sweep, or is that oversimplified for how FDTD discretization error
-typically scales (often closer to a low-order power of resolution,
-not a clean geometric ratio)? Once the resolution-100 value comes in,
-what agreement threshold between successive resolutions (e.g., within
-5%, within 0.05 dB) would be reasonable to call this "converged enough
-to use," given this number feeds a real engineering decision (4:1 vs.
-8:1 combiner fan-in) rather than needing extreme precision?
+**Resolution 100 completed the sweep**: IL = **1.96 dB**, split exactly
+0.5000:0.5000. Full sequence: 2.87 → 2.30 → 2.07 → **1.96 dB** (res
+40/60/80/100), gaps shrinking consistently (ratios 0.40, then 0.48 —
+close enough to trust a geometric extrapolation): limit ≈ **1.87 dB**.
+Fed into the real `sax_combiner_model.py` rollup: **N=8 tree loss ≈
+5.88 dB (measured) / 5.61 dB (extrapolated); N=16 ≈ 7.84 / 7.48 dB** —
+roughly 15–20× worse than this program's original `~0.1 dB/stage`
+literature guess. **This is the real answer this repo exists to find
+— not bench-confirmed (the original decision-ledger ask), but real,
+resolution-converged FDTD evidence, a meaningfully stronger basis than
+any guess this program had before today.**
 
-**How to work this problem (the house style for this program):** three
-different bug hypotheses were tried and ruled out earlier today before
-the real cause (under-resolved tapers) was found — that question is
-closed; focus on convergence-criteria and extrapolation-validity now,
-not on re-diagnosing why earlier runs didn't converge. Say what you're
-confident about vs. guessing at.
+**If you're reading this for the first time via a fresh paste**: the
+core question is answered (see above); don't re-run the convergence
+study or re-derive the per-junction number. What's still genuinely
+open: (1) corroborating this 2D effective-index-method result with
+something independent (a full 3D simulation, or eventually a real
+bench measurement); (2) the actual `optical.cell.fanin` decision
+(4:1 ≈ 3.9 dB vs. 8:1 ≈ 5.9 dB is now a real comparison, but whether
+that tradeoff is acceptable is a link-budget call this repo doesn't
+have the authority to make).
+
+**How to work this problem (the house style for this program):** if
+asked to extend or double-check this result, cite the real numbers
+above rather than re-deriving them from scratch, and say explicitly
+whether anything you add is `[M]easured`, `[D]erived`, or `[A]ssumed`.

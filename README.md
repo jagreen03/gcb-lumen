@@ -5,32 +5,23 @@ that has no access to this repo?** Paste
 [`EXTERNAL_AI_BRIEFING.md`](EXTERNAL_AI_BRIEFING.md) — it's
 self-contained, no repo access required.
 
-**Progress, 2026-09-13 (a real day-long debugging arc, all four
-findings kept, not just the last one)**: an external AI's suggestion
-produced a working `sax_combiner_model.py` circuit-level rollup
-([`FINDINGS-2026-09-13.md`](FINDINGS-2026-09-13.md)). Real FDTD access
-(`pymeep`, via `micromamba`/conda-forge) was then found on this host,
-correcting this repo's own prior "FDTD is effectively unavailable"
-framing, and a real 2D FDTD simulation of the exact combiner geometry
-was built — but its first result didn't converge across resolution
-([`FINDINGS-2026-09-13-fdtd.md`](FINDINGS-2026-09-13-fdtd.md)). A
-suspected normalization fix was tried and **failed**
-([`FINDINGS-2026-09-13-fdtd-v2.md`](FINDINGS-2026-09-13-fdtd-v2.md)).
-**Both of those hypotheses turned out to be wrong** — checking the
-actual run-duration logs before building a third fix showed resolution
-was never the variable behind them. **The real cause, found at a
-fourth, higher resolution**
-([`FINDINGS-2026-09-13-fdtd-v3.md`](FINDINGS-2026-09-13-fdtd-v3.md)):
-resolutions 20–30 were simply too coarse to resolve the taper geometry
-— not a bug. **Resolution 80 then confirmed clean, monotonic
-convergence**
-([`FINDINGS-2026-09-13-fdtd-v4.md`](FINDINGS-2026-09-13-fdtd-v4.md)):
-2.87 → 2.30 → **2.07 dB** across res 40/60/80, gaps shrinking each
-time — the real shape of genuine convergence, not a bounce. A rough
-extrapolation suggests a possible limit near ~1.9 dB; a resolution-100
-run is checking that now. **The core question below remains open**,
-but the search space has gone from "unexplained bug" to "one more
-confirmatory data point away from a real, trustworthy answer."
+**Progress, 2026-09-13 — the core question below is now substantially
+answered.** A real day-long arc (`FINDINGS-2026-09-13.md` through
+`-v5.md`, each kept in full — three real hypotheses tried and ruled
+out before the actual cause was found) ended with a resolution-
+converged FDTD result: **per-junction excess loss ≈ 1.96 dB
+`[M]easured-in-sim`** (extrapolating to ~1.87 dB at full convergence),
+giving a real system-level figure via `sax_combiner_model.py`: **N=8
+tree loss ≈ 5.88 dB, N=16 ≈ 7.84 dB** — roughly 15–20× worse than the
+literature's original `~0.1 dB/stage` guess this program had been
+using, still better than the fully-incoherent pessimistic bound. See
+[`FINDINGS-2026-09-13-fdtd-v5.md`](FINDINGS-2026-09-13-fdtd-v5.md) for
+the full arc and the real `optical.cell.fanin` comparison this now
+supports (4:1 ≈ 3.9 dB vs. 8:1 ≈ 5.9 dB — a real number, not yet a
+decision). **Not a bench measurement** — `DECISION_LEDGER.md`
+originally asked for one; this is 2D effective-index FDTD, a real but
+approximate technique. Flagged for Architect review, not represented
+as bench-equivalent.
 
 **One isolated problem: what does the real MMI power-summing combiner
 actually cost in insertion loss — and is the first cell 4:1 or 8:1?**

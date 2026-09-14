@@ -17,22 +17,22 @@ a task crosses into their territory, say so and stop.
 
 ## Your mandate
 
-- Run a real S-parameter / insertion-loss extraction against
-  `gcb-pic-core/mmi_power_tree.py`'s actual combiner geometry — not a
-  substitute waveguide, not a simplified model — at both
-  `N_INPUTS_SPEC=8` (Phase-I bench) and `N_INPUTS_PHASE2=16` (Phase-II
-  per-channel target).
+- ~~Run a real S-parameter / insertion-loss extraction against
+  `gcb-pic-core/mmi_power_tree.py`'s actual combiner geometry~~
+  **Done, 2026-09-13**: real FDTD (`pymeep`), resolution-converged
+  through res=100 — `1.96 dB [M]` per junction, extrapolating to
+  `~1.87 dB [D]`. See `FINDINGS-2026-09-13-fdtd-v5.md`. Not a bench
+  measurement — `DECISION_LEDGER.md` originally asked for one; flag
+  that distinction, don't blur it.
 - ~~Evaluate whether `femwell` alone suffices or whether a circuit-level
-  tool is required~~ **Settled, 2026-09-13**: SAX handles the
-  whole-tree rollup (`sax_combiner_model.py`), and real FDTD (`pymeep`,
-  via `micromamba`/conda-forge) is genuinely available for the
-  per-junction extraction itself — a real simulation is built
-  (`fdtd/mmi_fdtd.py`), just not yet convergent. Fix that simulation's
-  normalization bug next, per `FINDINGS-2026-09-13-fdtd.md` — do not
-  re-litigate which tool to use.
-- Once a real number exists: answer `optical.cell.fanin`
-  (`gcb-wiki/DECISION_LEDGER.md`) — 4:1 or 8:1 — from that number, not
-  from preference.
+  tool is required~~ **Settled**: SAX handles the whole-tree rollup
+  (`sax_combiner_model.py`, now run with the real measured value —
+  N=8 ≈ 5.88 dB total, N=16 ≈ 7.84 dB).
+- **Remaining**: bring this to the Architect's attention for
+  `optical.cell.fanin` (`gcb-wiki/DECISION_LEDGER.md`) — a real
+  comparison now exists (4:1 ≈ 3.9 dB vs. 8:1 ≈ 5.9 dB), but whether
+  that tradeoff is acceptable is a link-budget call outside this
+  repo's authority to make. Don't pick 4:1 or 8:1 yourself.
 
 ## Hard rules
 
@@ -71,11 +71,24 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V6 (2026-09-13: clean, monotonic convergence through res=80; a res=100 confirmatory run in progress)
+## MEASUREMENT STATE — V7 (2026-09-13: a real, converged-enough number exists; fed into the system-level model; core question substantially answered)
 
-**The real per-junction insertion-loss extraction has still NOT been
-obtained with a trustworthy number.** That remains this repo's core
-open question. Two things changed this session, in order:
+**A real per-junction insertion-loss number now exists: 1.96 dB
+`[M]easured-in-sim` (res=100), extrapolating to ~1.87 dB
+`[D]erived` at full convergence.** This repo's core open question is
+**substantially answered** — not bench-confirmed, but resolution-
+converged FDTD evidence, replacing the unsourced guesses this program
+was using. See `FINDINGS-2026-09-13-fdtd-v5.md` for the full arc and
+the real system-level numbers this produces (N=8: 5.88 dB total tree
+loss; N=16: 7.84 dB — both far worse than the `~0.1 dB/stage`
+literature guess, still better than the fully-incoherent pessimistic
+bound). **Remaining work is Deliverable 2** (feeding this into
+`optical.cell.fanin`'s actual decision) **and getting this corroborated
+by something other than a 2D effective-index approximation** (a full
+3D simulation, or eventually a bench measurement — `DECISION_LEDGER.md`
+originally called for the latter specifically).
+
+History, kept in full below rather than overwritten:
 
 **V2 (circuit-level rollup):** a SAX model of the exact combiner-tree
 topology now exists and is verified working — see
@@ -156,6 +169,29 @@ Once a real, converged number exists, `sax_combiner_model.py` already
 computes the real system-level answer for both N=8 and N=16 with no
 further modeling work.
 
+**V7 (2026-09-13, same day): resolution 100 completes the sweep — a
+real, converged-enough number.** IL = **1.96 dB**, split exactly
+0.5000:0.5000. Gap from res=80: only −0.11 dB (ratio 0.48 vs. the prior
+gap's ratio 0.40 — consistently decaying). Geometric extrapolation over
+all four points: limit ≈ **1.87 dB**. `sax_combiner_model.py` updated
+with both `EXCESS_LOSS_DB_MEASURED = 1.96` `[M]` and
+`EXCESS_LOSS_DB_EXTRAPOLATED = 1.87` `[D]`, run for real: **N=8 total
+tree loss ≈ 5.88 dB (measured) / 5.61 dB (extrapolated); N=16 ≈ 7.84 /
+7.48 dB** — roughly 15–20× worse than the original `~0.1 dB/stage`
+literature guess, still better than the `~10·log₁₀(N)` pessimistic
+bound. See `FINDINGS-2026-09-13-fdtd-v5.md` for the full arc and the
+`optical.cell.fanin` implication (a 4:1 cell would cost ~3.9 dB vs.
+8:1's ~5.9 dB — a real, usable comparison now, though whether that
+difference is acceptable is this program's link-budget call, not this
+repo's).
+
+**What this is NOT**: a bench measurement. `DECISION_LEDGER.md`'s
+`optical.cell.combiner-loss` entry specifically called for one; this
+is 2D effective-index-method FDTD, a real but approximate technique.
+Recommend updating that entry to reflect real FDTD evidence exists
+(not closing it as bench-equivalent) — for Architect review, not
+decided unilaterally here.
+
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
   `N_INPUTS_PHASE2=16`, passing its own `check()` geometry sanity test.
@@ -183,10 +219,10 @@ step; the fan-in decision.
 `N=64`/`L=16` Phase-II sizing this combiner must eventually satisfy),
 `gcb-wiki/DECISION_LEDGER.md` (`optical.cell.combiner-loss`,
 `optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`,
-`FINDINGS-2026-09-13-fdtd.md` through `-v4.md`, `fdtd/mmi_fdtd.py`,
-`fdtd/mmi_fdtd_v2.py`, `fdtd/mmi_fdtd_single.py` (this repo: the real
-FDTD access finding, two ruled-out hypotheses, the real under-
-resolution cause, and clean convergence through res=80).
+`FINDINGS-2026-09-13-fdtd.md` through `-v5.md`, `sax_combiner_model.py`,
+`fdtd/mmi_fdtd.py`, `fdtd/mmi_fdtd_v2.py`, `fdtd/mmi_fdtd_single.py`
+(this repo: the full arc from "no tool known" to a real, resolution-
+converged per-junction number and its system-level consequence).
 
 ## How you work
 
