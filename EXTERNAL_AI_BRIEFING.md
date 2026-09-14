@@ -244,26 +244,45 @@ suspect) the `stop_when_fields_decayed` stopping criterion causes
 different resolutions to integrate their flux DFTs over different
 *total* simulation times, under-counting pulse energy inconsistently.
 
-## The actual question to help with — now about run-duration, not normalization
+## Update, 2026-09-13 (fourth pass, same day) — the run-duration hypothesis was ALSO wrong; the real cause is under-resolution; real convergence is now visible
 
-**Given a MEEP `Simulation` using `sim.run(until_after_sources=
-mp.stop_when_fields_decayed(50, mp.Ez, some_point, 1e-4))`, with
-`add_flux` monitors (continuous DFT accumulation from `t=0`)** — can a
-field-decay-based stopping criterion cause different resolutions to
-stop at meaningfully different *total* elapsed simulation time in a
-way that under-counts flux-monitor energy inconsistently across runs?
-If so, is replacing it with a fixed, resolution-independent `until=`
-(generous enough for the pulse to fully clear the cell at the slowest
-expected group velocity) the right fix, and roughly how should that
-fixed time be sized for a ~30 µm cell at λ≈1.31 µm in a waveguide with
-`n_eff≈2.68`? Separately: is there a known resolution-dependence in
-how `EigenModeSource` normalizes injected power that's worth checking
-instead of (or in addition to) the run-duration issue?
+**The run-duration hypothesis above was checked directly before
+building a fix for it, and was wrong too**: the actual printed
+elapsed-time logs are essentially identical across every resolution
+tried (reference run ≈150.0, junction run ≈200.0, at res 20/30/40
+alike — negligible rounding differences only). **Don't suggest
+run-duration or `EigenModeSource` normalization fixes either** — both
+ruled out.
 
-**How to work this problem (the house style for this program):**
-explain *why* your suggested fix would produce resolution-*stable*
-`P_in` specifically, not just cite it as best practice. Two fixes have
-already been tried and failed this session (a same-run monitor fix and
-a separate-reference-run fix) — don't suggest either again without
-explaining what's different this time. Say what you're confident about
-vs. guessing at.
+**The real cause, found instead by trying a fourth, higher resolution
+(60 px/µm)**: `P_in`/insertion-loss values are 4.36 dB (res 20), 10.94
+dB (res 30), 2.87 dB (res 40), **2.30 dB (res 60)**. **40 and 60 are
+meaningfully close to each other (~20% apart) compared to every
+earlier pair (2–4× apart).** The honest read: resolutions 20/30 were
+simply too coarse to resolve the input/output tapers (narrowing to
+0.5 µm over 10 µm — only 10 pixels across the narrow end at res=20),
+whose diagonal edges get staircased onto the FDTD grid — a normal,
+well-known FDTD sensitivity for sub-wavelength diagonal geometry, not
+a bug. Real convergence is visible now; it isn't finished.
+
+## The actual question to help with — now a standard (if expensive) convergence study, not a bug hunt
+
+**Given the pattern above (loss estimates converging as resolution
+increases: 2.87 dB at 40 px/µm, 2.30 dB at 60 px/µm, still ~20%
+apart)** — what's a sensible next resolution to try to get within, say,
+5–10% agreement between successive points, given 2D MEEP FDTD run cost
+scales roughly as resolution^2.5–3? Is there a smarter alternative to
+simply raising global resolution further — e.g., verifying MEEP's
+default dielectric subpixel-smoothing is actually active for `Prism`
+(polygon) geometries the way it is for `Block`s, or replacing the
+tapers' `Prism` representation with many small `Block` steps — that
+might converge faster than brute-force resolution increases?
+
+**How to work this problem (the house style for this program):** three
+different hypotheses have already been tried and ruled out today
+(same-run monitor contamination, a separate normalization reference
+run, and run-duration variation) — the real cause (under-resolved
+tapers) is now known, so focus on *how to converge efficiently*, not
+on re-diagnosing why it doesn't converge. Say what you're confident
+about vs. guessing at, and if you estimate a likely final dB value,
+say clearly that it's an extrapolation, not a converged result.

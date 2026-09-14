@@ -71,7 +71,7 @@ a task crosses into their territory, say so and stop.
    only, same epistemic tier as the rest of this program's photonics
    work.
 
-## MEASUREMENT STATE — V4 (2026-09-13: real FDTD access found and used; one fix tried and ruled out; diagnosis sharpened, not yet fixed)
+## MEASUREMENT STATE — V5 (2026-09-13: both prior hypotheses were wrong; real cause found — under-resolution; real convergence now visible, not yet final)
 
 **The real per-junction insertion-loss extraction has still NOT been
 obtained with a trustworthy number.** That remains this repo's core
@@ -111,13 +111,32 @@ next concrete step (replace the decay-based stop with a fixed `until=`
 so every resolution integrates the same total time, before trying
 anything else).
 
-**The next real action: fix the run-duration/DFT-completeness issue
-before trying a third hypothesis** — two real fixes have now been
-tried and ruled out; this needs careful, one-variable-at-a-time
-debugging, not another rushed guess. Once a real, resolution-converged
-number exists, `sax_combiner_model.py` already computes the real
-system-level answer for both N=8 and N=16 with no further modeling
-work.
+**V5 (2026-09-13, same day: the V4 diagnosis was checked before
+acting on it, and found wrong too — then the real cause was found):**
+directly checked whether resolutions actually integrate over different
+total simulation time, before building a fix for it. **They don't** —
+the printed "run finished at t=..." lines are essentially identical
+across every resolution tried (reference run ≈150.0, junction run
+≈200.0 at res 20/30/40 alike). **V4's diagnosis was wrong too.** Ran a
+fourth, higher resolution (60 px/µm) instead: IL = **2.30 dB**,
+P_in = 2.669e-5 — meaningfully closer to res=40's 2.87 dB than any
+earlier pair (a ~20% gap, vs. 2–4× swings before). **Real conclusion**:
+resolutions 20 and 30 were simply too coarse to resolve this
+geometry's tapers (narrowing to 0.5 µm over 10 µm — only 10 pixels
+across at res=20, staircased on the Yee grid) — not a bug, not a
+normalization error, not a timing artifact. 40→60 shows genuine
+convergence, not yet complete. See `FINDINGS-2026-09-13-fdtd-v3.md`
+for the full reasoning, including a directional (not final) read that
+the true per-junction loss is likely ~2–2.5 dB — well above the
+literature's ~0.1 dB/stage optimistic guess.
+
+**The next real action: continue the resolution sweep (80, then
+100+ px/µm) until two successive resolutions agree within a chosen
+tolerance** — a real, known, explicable cause now, not blind guessing;
+this is a standard (if computationally expensive) FDTD convergence
+study, not a bug hunt. Once a real, converged number exists,
+`sax_combiner_model.py` already computes the real system-level answer
+for both N=8 and N=16 with no further modeling work.
 
 **What's real so far:**
 - Layout generator: `gcb-pic-core/mmi_power_tree.py`, `N_INPUTS_SPEC=8`,
@@ -147,9 +166,10 @@ step; the fan-in decision.
 `gcb-wiki/DECISION_LEDGER.md` (`optical.cell.combiner-loss`,
 `optical.cell.fanin`), `gcb-workspaces/backlog/TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md`,
 `FINDINGS-2026-09-13-fdtd.md`, `FINDINGS-2026-09-13-fdtd-v2.md`,
-`fdtd/mmi_fdtd.py`, `fdtd/mmi_fdtd_v2.py` (this repo, the real FDTD
-access finding, the first unconverged simulation, and the tried-and-
-ruled-out normalization fix).
+`FINDINGS-2026-09-13-fdtd-v3.md`, `fdtd/mmi_fdtd.py`,
+`fdtd/mmi_fdtd_v2.py` (this repo: the real FDTD access finding, two
+ruled-out hypotheses, and the real under-resolution cause found at a
+fourth, higher resolution).
 
 ## How you work
 

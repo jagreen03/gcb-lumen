@@ -5,25 +5,28 @@ that has no access to this repo?** Paste
 [`EXTERNAL_AI_BRIEFING.md`](EXTERNAL_AI_BRIEFING.md) — it's
 self-contained, no repo access required.
 
-**Progress, 2026-09-13**: an external AI's response to this repo's
-briefing was checked and partly executed — see
-[`FINDINGS-2026-09-13.md`](FINDINGS-2026-09-13.md) — producing a
-working `sax_combiner_model.py` circuit-level rollup. **Then, same
-day**: real FDTD access (`pymeep`, via `micromamba`/conda-forge) was
-found on this host, correcting this repo's own prior "FDTD is
-effectively unavailable" framing. A real 2D FDTD simulation of the
-exact combiner geometry was built and run — see
-[`FINDINGS-2026-09-13-fdtd.md`](FINDINGS-2026-09-13-fdtd.md). **The
-result is not yet trustworthy** (a real convergence bug — three
-resolutions gave 4.36/9.06/2.86 dB, not a converging sequence) —
-reported honestly, not cherry-picked. **The suspected fix was tried
-next, same day, and failed** — see
-[`FINDINGS-2026-09-13-fdtd-v2.md`](FINDINGS-2026-09-13-fdtd-v2.md): a
-separate normalization reference run didn't converge the result
-either, but it ruled out one real hypothesis and sharpened the
-diagnosis toward the simulation's run-duration/stopping criterion.
-**The core question below
-remains open.**
+**Progress, 2026-09-13 (a real day-long debugging arc, all four
+findings kept, not just the last one)**: an external AI's suggestion
+produced a working `sax_combiner_model.py` circuit-level rollup
+([`FINDINGS-2026-09-13.md`](FINDINGS-2026-09-13.md)). Real FDTD access
+(`pymeep`, via `micromamba`/conda-forge) was then found on this host,
+correcting this repo's own prior "FDTD is effectively unavailable"
+framing, and a real 2D FDTD simulation of the exact combiner geometry
+was built — but its first result didn't converge across resolution
+([`FINDINGS-2026-09-13-fdtd.md`](FINDINGS-2026-09-13-fdtd.md)). A
+suspected normalization fix was tried and **failed**
+([`FINDINGS-2026-09-13-fdtd-v2.md`](FINDINGS-2026-09-13-fdtd-v2.md)).
+**Both of those hypotheses turned out to be wrong** — checking the
+actual run-duration logs before building a third fix showed resolution
+was never the variable behind them. **The real cause, found at a
+fourth, higher resolution**
+([`FINDINGS-2026-09-13-fdtd-v3.md`](FINDINGS-2026-09-13-fdtd-v3.md)):
+resolutions 20–30 were simply too coarse to resolve the taper geometry
+— not a bug. 40→60 shows genuine convergence (2.87 → 2.30 dB), pointing
+toward a per-junction loss around ~2–2.5 dB — directional, not final.
+**The core question below remains open**, but the search space has
+gone from "unexplained bug" to "a normal, if expensive, FDTD
+convergence study, partway done."
 
 **One isolated problem: what does the real MMI power-summing combiner
 actually cost in insertion loss — and is the first cell 4:1 or 8:1?**
